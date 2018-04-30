@@ -29,18 +29,20 @@ namespace warehouse
 
         private void Select_File_Click(object sender, EventArgs e)
         {
+            long start = GC.GetTotalMemory(false);
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             itemcollection = new itemset();
             openFileDialog1.InitialDirectory = "C:\\Users\\Junchu\\Documents\\EECS221APP";
             openFileDialog1.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
             openFileDialog1.FilterIndex = 2;
             openFileDialog1.RestoreDirectory = true;
-
+            var watch = System.Diagnostics.Stopwatch.StartNew();
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    MessageBox.Show(openFileDialog1.FileName.ToString());
+                    watch = System.Diagnostics.Stopwatch.StartNew();
+                    //MessageBox.Show(openFileDialog1.FileName.ToString());
                     string filedirectory = openFileDialog1.FileName.ToString();
                     using (var reader = new StreamReader(filedirectory))
                     {
@@ -53,10 +55,11 @@ namespace warehouse
                             itemcollection.additem(values[0].ToString(), values[1].ToString(), values[2].ToString());
                             
                         }
-                        MessageBox.Show("Finish Reading"+" maxx="+itemcollection.maxx.ToString()+" maxy="+itemcollection.maxy.ToString());
+                        //MessageBox.Show("Finish Reading"+" maxx="+itemcollection.maxx.ToString()+" maxy="+itemcollection.maxy.ToString());
                         
 
                     }
+                    
 
                 }
                 catch (Exception ex)
@@ -80,8 +83,11 @@ namespace warehouse
                 }
                 int maprow = groupBox1.Height / (2 * (itemcollection.maxy+1)+1);
                 int mapcolumn = groupBox1.Width/(2 * (itemcollection.maxx+1)+1);
-                MessageBox.Show("x=" + mapcolumn.ToString() + " y=" + maprow.ToString());
+                //MessageBox.Show("x=" + mapcolumn.ToString() + " y=" + maprow.ToString());
                 labelset = new Label[2 * (itemcollection.maxy+1)+1, 2 * (itemcollection.maxx+1)+1];
+                watch.Stop();
+                var elapsedMs = watch.ElapsedMilliseconds;
+                MessageBox.Show("the time of calculate the map is " + elapsedMs.ToString());
                 for (int i=0;i< 2 * (itemcollection.maxy+1)+1; i++)
                 {
                     for (int j=0;j< 2 * (itemcollection.maxx+1)+1; j++)
@@ -101,24 +107,28 @@ namespace warehouse
                         //MessageBox.Show("column=" + (j * mapcolumn).ToString() + " row=" + (i * maprow).ToString());
                     }
                 }
-                MessageBox.Show("Complete Showing Map");
+                long end = GC.GetTotalMemory(false);
+                MessageBox.Show("the total memory usage is " + (end - start).ToString());
+                //MessageBox.Show("Complete Showing Map");
                 Starting_Position.Enabled = true;
                 Destionation.Enabled = true;
                 Find_Path.Enabled = true;
                 Start_location.Enabled = true;
-                End_location.Enabled = true;
                 Multi_item_set.Enabled = true;
                 Find_multi_item.Enabled = true;
                 LoadOrder.Enabled = true;
                 Clear_Path.Enabled = true;
                 Clear_Path_Simply.Enabled = true;
                 Find_Path_Multi_No_Change_Order.Enabled = true;
+                Find_Lower_Bound.Enabled = true;
 
             }
         }
 
         private void Find_Path_Click(object sender, EventArgs e)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            long startmemory = GC.GetTotalMemory(false);
             try
             {
                 String[] start = Starting_Position.Text.Split(',');
@@ -145,11 +155,15 @@ namespace warehouse
             {
                 MessageBox.Show(error.Message);
             }
-            
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            long endmemory = GC.GetTotalMemory(false);
+            MessageBox.Show("the total memory usage is " + (endmemory - startmemory).ToString());
+            MessageBox.Show("the amount of time finding simply path is " + elapsedMs.ToString());
 
         }
 
-        void findpath(int sx, int sy,int dx, int dy)
+        int findpath(int sx, int sy,int dx, int dy)
         {
             
             Queue<string> q = new Queue<string>();
@@ -158,6 +172,7 @@ namespace warehouse
             int distance = 0;
             map[sy, sx].setnode(distance, "start");
             bool find = false;
+            distance++;
             while ((q.Count > 0 || nextround.Count > 0)&&!find)
             {
 
@@ -220,17 +235,13 @@ namespace warehouse
                     {
                         if (!map[nexty, nextx].visited)
                         {
-                            map[nexty, nextx].setnode(distance, location);
+                            
                             if (map[nexty, nextx].itemnumber == 0)
                             {
+                                map[nexty, nextx].setnode(distance, location);
                                 nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
                             }
                         }
-                    }
-                    if ((nextx == dx) && (nexty == dy))
-                    {
-                        find = true;
-                        break;
                     }
 
                 }
@@ -241,8 +252,9 @@ namespace warehouse
                 }
                 
             }
-            MessageBox.Show("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + dx.ToString() + "," + dy.ToString() + " distance=" + map[dy, dx].distance.ToString());
-            paint(dx, dy);
+            //MessageBox.Show("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + dx.ToString() + "," + dy.ToString() + " distance=" + map[dy, dx].distance.ToString());
+            //paint(dx, dy);
+            return map[dy, dx].distance;
 
 
         }
@@ -254,6 +266,7 @@ namespace warehouse
             q.Enqueue(sx.ToString() + "," + sy.ToString());
             int distance = 0;
             map[sy, sx].setnode(distance, "start");
+            distance++;
             bool find = false;
             while ((q.Count > 0 || nextround.Count > 0) && !find)
             {
@@ -279,11 +292,12 @@ namespace warehouse
                             }
                         }
                     }
-                    if ((nextx == dx) && (nexty == dy))
+                    //change this part so we can access point only from the right
+                    /*if ((nextx == dx) && (nexty == dy))
                     {
                         find = true;
                         break;
-                    }
+                    }*/
                     nexty = y + 1;
                     nextx = x;
                     if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
@@ -298,11 +312,12 @@ namespace warehouse
                             }
                         }
                     }
-                    if ((nextx == dx) && (nexty == dy))
+                    //change this part so we can access point only from the right
+                    /*if ((nextx == dx) && (nexty == dy))
                     {
                         find = true;
                         break;
-                    }
+                    }*/
                     nexty = y;
                     nextx = x - 1;
                     if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
@@ -327,18 +342,20 @@ namespace warehouse
                     {
                         if (!map[nexty, nextx].visited)
                         {
-                            map[nexty, nextx].setnode(distance, location);
+                            
                             if (map[nexty, nextx].itemnumber == 0)
                             {
+                                map[nexty, nextx].setnode(distance, location);
                                 nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
                             }
                         }
                     }
-                    if ((nextx == dx) && (nexty == dy))
+                    //change this part so we can access point only from the right
+                    /*if ((nextx == dx) && (nexty == dy))
                     {
                         find = true;
                         break;
-                    }
+                    }*/
 
                 }
                 distance++;
@@ -351,7 +368,7 @@ namespace warehouse
             
             if (!write)
             {
-                MessageBox.Show("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + dx.ToString() + "," + dy.ToString() + " distance=" + map[dy, dx].distance.ToString());
+                //MessageBox.Show("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + dx.ToString() + "," + dy.ToString() + " distance=" + map[dy, dx].distance.ToString());
                 paint(dx, dy);
             }
             else
@@ -361,199 +378,225 @@ namespace warehouse
             return map[dy, dx].distance;
         }
 
-        List<string> findpath_multi(int startx, int starty, List<string>destination,bool write)
+        List<string> findpath_multi(List<string>destination,bool write)
         {
-            bool firststart = true;
-            int sx = startx;
-            int sy = starty;
-            string resultcor = "";
-            List<int> dx = new List<int>();
-            List<int> dy = new List<int>();
-            int direction = 0;
-            int totaldistance = 0;
-            List<string> coordinateset = new List<string>();
-            foreach (string cor in destination)
+            List<string> finalcoordinateset = new List<string>();
+            int finaltotaldistance = 1000000;
+            for (int startpoint = 0; startpoint < destination.Count; startpoint++)
             {
-                string[] temp = cor.Split(',');
-                dx.Add(Convert.ToInt32(temp[0]));
-                dy.Add(Convert.ToInt32(temp[1]));
-            }
-            while (dx.Count > 0)
-            {
-                if(firststart)
+                bool firststart = true;
+                String[] start = destination[startpoint].Split(',');
+                int startx = Convert.ToInt32(start[0]);
+                int starty = Convert.ToInt32(start[1]);
+                int sx = startx + 1;
+                int sy = starty;
+                string resultcor = "";
+                List<int> dx = new List<int>();
+                List<int> dy = new List<int>();
+                int direction = 1;
+                int totaldistance = 0;
+                List<string> coordinateset = new List<string>();
+                coordinateset.Add(sx.ToString() + "," + sy.ToString());
+                for (int i = 0; i < destination.Count; i++)
                 {
-                    firststart = false;
-                }
-                else
-                {
-                    string[] temp = resultcor.Split(',');
-                    sx = Convert.ToInt32(temp[0])+direction;
-                    sy = Convert.ToInt32(temp[1]);
-                    direction = 0;
-                }
-                Queue<string> q = new Queue<string>();
-                Queue<string> nextround = new Queue<string>();
-                q.Enqueue(sx.ToString() + "," + sy.ToString());
-                int distance = 0;
-                map[sy, sx].setnode(distance, "start");
-                bool find = false;
-                
-                while ((q.Count > 0 || nextround.Count > 0) && !find)
-                {
-
-                    while (q.Count > 0)
+                    if (i != startpoint)
                     {
-                        string location = q.Dequeue();
-                        string[] cordination = location.Split(',');
-                        int y = Convert.ToInt32(cordination[1]);
-                        int x = Convert.ToInt32(cordination[0]);
-                        //MessageBox.Show("start position=" + x.ToString() + "," + y.ToString() + " end position=" + dx.ToString() + "," + dy.ToString());
-                        int nexty = y - 1;
-                        int nextx = x;
-                        if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
-                        {
-                            if (!map[nexty, nextx].visited)
-                            {
-                                
-                                if (map[nexty, nextx].itemnumber == 0)
-                                {
-                                    map[nexty, nextx].setnode(distance, location);
-                                    nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
-                                }
-                            }
-                        }
-                        nexty = y + 1;
-                        nextx = x;
-                        if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
-                        {
-                            if (!map[nexty, nextx].visited)
-                            {
-                                
-                                if (map[nexty, nextx].itemnumber == 0)
-                                {
-                                    map[nexty, nextx].setnode(distance, location);
-                                    nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
-                                }
-                            }
-                        }
-                        nexty = y;
-                        nextx = x - 1;
-                        if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
-                        {
-                            if (!map[nexty, nextx].visited)
-                            {
-                                map[nexty, nextx].setnode(distance, location);
-                                if (map[nexty, nextx].itemnumber == 0)
-                                {
-                                    nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
-                                }
-                            }
-                        }
-                        for (int i = 0; i < dx.Count; i++)
-                        {
-                            if ((nextx == dx[i]) && (nexty == dy[i]))
-                            {
-                                find = true;
-                                resultcor = dx[i].ToString() + "," + dy[i].ToString();
-                                dx.RemoveAt(i);
-                                dy.RemoveAt(i);
-                                direction = 1;
-                                if (!write)
-                                {
-                                    MessageBox.Show(resultcor);
-                                }
-                                break;
-                            }
-                        }
-                        if(find)
-                        {
-                            break;
-                        }
-                        nexty = y;
-                        nextx = x + 1;
-                        if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
-                        {
-                            if (!map[nexty, nextx].visited)
-                            {
-                                map[nexty, nextx].setnode(distance, location);
-                                if (map[nexty, nextx].itemnumber == 0)
-                                {
-                                    nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
-                                }
-                            }
-                        }
-                        for (int i = 0; i < dx.Count; i++)
-                        {
-                            if ((nextx == dx[i]) && (nexty == dy[i]))
-                            {
-                                find = true;
-                                resultcor = dx[i].ToString() + "," + dy[i].ToString();
-                                dx.RemoveAt(i);
-                                dy.RemoveAt(i);
-                                direction = -1;
-                                if (!write)
-                                {
-                                    MessageBox.Show(resultcor);
-                                }
-                                break;
-                            }
-                        }
-                        if (find)
-                        {
-                            break;
-                        }
+                        string[] temp = destination[i].Split(',');
+                        dx.Add(Convert.ToInt32(temp[0]));
+                        dy.Add(Convert.ToInt32(temp[1]));
                     }
+                }
+                while (dx.Count > 0)
+                {
+                    if (firststart)
+                    {
+                        firststart = false;
+                    }
+                    else
+                    {
+                        string[] temp = resultcor.Split(',');
+                        sx = Convert.ToInt32(temp[0]) + direction;
+                        sy = Convert.ToInt32(temp[1]);
+                        direction = 0;
+                    }
+                    Queue<string> q = new Queue<string>();
+                    Queue<string> nextround = new Queue<string>();
+                    q.Enqueue(sx.ToString() + "," + sy.ToString());
+                    int distance = 0;
+                    map[sy, sx].setnode(distance, "start");
+                    bool find = false;
                     distance++;
-                    while (nextround.Count > 0)
+                    while ((q.Count > 0 || nextround.Count > 0) && !find)
                     {
-                        q.Enqueue(nextround.Dequeue());
-                    }
 
+                        while (q.Count > 0)
+                        {
+                            string location = q.Dequeue();
+                            string[] cordination = location.Split(',');
+                            int y = Convert.ToInt32(cordination[1]);
+                            int x = Convert.ToInt32(cordination[0]);
+                            //MessageBox.Show("start position=" + x.ToString() + "," + y.ToString() + " end position=" + dx.ToString() + "," + dy.ToString());
+                            int nexty = y - 1;
+                            int nextx = x;
+                            if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
+                            {
+                                if (!map[nexty, nextx].visited)
+                                {
+
+                                    if (map[nexty, nextx].itemnumber == 0)
+                                    {
+                                        map[nexty, nextx].setnode(distance, location);
+                                        nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
+                                    }
+                                }
+                            }
+                            nexty = y + 1;
+                            nextx = x;
+                            if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
+                            {
+                                if (!map[nexty, nextx].visited)
+                                {
+
+                                    if (map[nexty, nextx].itemnumber == 0)
+                                    {
+                                        map[nexty, nextx].setnode(distance, location);
+                                        nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
+                                    }
+                                }
+                            }
+                            nexty = y;
+                            nextx = x - 1;
+                            if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
+                            {
+                                if (!map[nexty, nextx].visited)
+                                {
+                                    map[nexty, nextx].setnode(distance, location);
+                                    if (map[nexty, nextx].itemnumber == 0)
+                                    {
+                                        nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
+                                    }
+                                }
+                            }
+                            for (int i = 0; i < dx.Count; i++)
+                            {
+                                if ((nextx == dx[i]) && (nexty == dy[i]))
+                                {
+                                    find = true;
+                                    resultcor = dx[i].ToString() + "," + dy[i].ToString();
+                                    dx.RemoveAt(i);
+                                    dy.RemoveAt(i);
+                                    direction = 1;
+                                    if (!write)
+                                    {
+                                        //MessageBox.Show(resultcor);
+                                    }
+                                    break;
+                                }
+                            }
+                            if (find)
+                            {
+                                break;
+                            }
+                            nexty = y;
+                            nextx = x + 1;
+                            if (nexty >= 0 && nexty < height && nextx >= 0 && nextx < width)
+                            {
+                                if (!map[nexty, nextx].visited)
+                                {
+
+                                    if (map[nexty, nextx].itemnumber == 0)
+                                    {
+                                        map[nexty, nextx].setnode(distance, location);
+                                        nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
+                                    }
+                                }
+                            }
+                            //change this part so that we can only access the shelf from the right
+                            /*for (int i = 0; i < dx.Count; i++)
+                            {
+                                if ((nextx == dx[i]) && (nexty == dy[i]))
+                                {
+                                    find = true;
+                                    resultcor = dx[i].ToString() + "," + dy[i].ToString();
+                                    dx.RemoveAt(i);
+                                    dy.RemoveAt(i);
+                                    direction = -1;
+                                    if (!write)
+                                    {
+                                        //MessageBox.Show(resultcor);
+                                    }
+                                    break;
+                                }
+                            }
+                            if (find)
+                            {
+                                break;
+                            }*/
+                        }
+                        distance++;
+                        while (nextround.Count > 0)
+                        {
+                            q.Enqueue(nextround.Dequeue());
+                        }
+
+                    }
+                    string[] temp1 = resultcor.Split(',');
+                    int rx = Convert.ToInt32(temp1[0]);
+                    int ry = Convert.ToInt32(temp1[1]);
+                    totaldistance = totaldistance + map[ry, rx].distance;
+                    if (!write)
+                    {
+                        //MessageBox.Show("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + rx.ToString() + "," + ry.ToString() + " distance=" + map[ry, rx].distance.ToString());
+                    }
+                    else
+                    {
+                        tw.WriteLine("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + rx.ToString() + "," + ry.ToString() + " distance=" + map[ry, rx].distance.ToString());
+                    }
+                    coordinateset.Add(rx.ToString() + "," + ry.ToString());
+                    if (!write)
+                    {
+                        //paint(rx, ry);
+                    }
+                    foreach (item_on_map cordination in map)
+                    {
+                        cordination.cleardata();
+                    }
                 }
-                string[] temp1 = resultcor.Split(',');
-                int rx = Convert.ToInt32(temp1[0]);
-                int ry = Convert.ToInt32(temp1[1]);
-                totaldistance = totaldistance + map[ry, rx].distance;
-                if (!write)
+                string[] lasttemp = resultcor.Split(',');
+                sx = Convert.ToInt32(lasttemp[0]) + direction;
+                sy = Convert.ToInt32(lasttemp[1]);
+                direction = 0;
+                /*string[] lastend = End_location.Text.Split(',');
+                int ex = Convert.ToInt32(lastend[0]);
+                int ey = Convert.ToInt32(lastend[1]);*/
+                //the starting node and ending node are the same now
+                string[] lastend = destination[startpoint].Split(',');
+                int ex = Convert.ToInt32(lastend[0]);
+                int ey = Convert.ToInt32(lastend[1]);
+                totaldistance = totaldistance + findpath_exit(sx, sy, ex, ey, write);
+                if(totaldistance<finaltotaldistance)
                 {
-                    MessageBox.Show("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + rx.ToString() + "," + ry.ToString() + " distance=" + map[ry, rx].distance.ToString());
+                    finaltotaldistance = totaldistance;
+                    finalcoordinateset = coordinateset;
                 }
-                else
-                {
-                    tw.WriteLine("starting position=" + sx.ToString() + "," + sy.ToString() + " end point=" + rx.ToString() + "," + ry.ToString() + " distance=" + map[ry, rx].distance.ToString());
-                }
-                coordinateset.Add(rx.ToString() + "," + ry.ToString());
-                if (!write)
-                {
-                    paint(rx, ry);
-                }
-                foreach (item_on_map cordination in map)
-                {
-                    cordination.cleardata();
-                }
+                clear();
+                
             }
-            string[]lasttemp = resultcor.Split(',');
-            sx = Convert.ToInt32(lasttemp[0]) + direction;
-            sy = Convert.ToInt32(lasttemp[1]);
-            direction = 0;
-            string[] lastend = End_location.Text.Split(',');
-            int ex = Convert.ToInt32(lastend[0]);
-            int ey = Convert.ToInt32(lastend[1]);
-            totaldistance=totaldistance+findpath_exit(sx, sy, ex, ey,write);
             string path = "";
-            foreach (string temp in coordinateset)
+            finalcoordinateset.Add(finaltotaldistance.ToString());
+            foreach (string temp in finalcoordinateset)
             {
                 path = path + " " + temp;
             }
             if (!write)
             {
-                MessageBox.Show("the path is " + path + " the total distance is " + totaldistance.ToString());
+                //MessageBox.Show("the path is " + path + " the total distance is " + finaltotaldistance.ToString());
             }
             else
             {
-                tw.WriteLine("the optimal path is " + path + " the total distance is " + totaldistance.ToString());
+                tw.WriteLine("the optimal path is " + path + " the total distance is " + finaltotaldistance.ToString());
             }
-            return coordinateset;
+            return finalcoordinateset;
 
         }
 
@@ -565,7 +608,7 @@ namespace warehouse
             string resultcor = "";
             List<int> dx = new List<int>();
             List<int> dy = new List<int>();
-            int direction = 0;
+            int direction = 1;
             int totaldistance = 0;
             List<string> coordinateset = new List<string>();
             foreach (string cor in destination)
@@ -593,7 +636,7 @@ namespace warehouse
                 int distance = 0;
                 map[sy, sx].setnode(distance, "start");
                 bool find = false;
-
+                distance++;
                 while ((q.Count > 0 || nextround.Count > 0) && !find)
                 {
 
@@ -666,15 +709,16 @@ namespace warehouse
                         {
                             if (!map[nexty, nextx].visited)
                             {
-                                map[nexty, nextx].setnode(distance, location);
+                                
                                 if (map[nexty, nextx].itemnumber == 0)
                                 {
+                                    map[nexty, nextx].setnode(distance, location);
                                     nextround.Enqueue(nextx.ToString() + "," + nexty.ToString());
                                 }
                             }
                         }
-
-                        if ((nextx == dx[0]) && (nexty == dy[0]))
+                        //change this part so we can access point only from the right
+                        /*if ((nextx == dx[0]) && (nexty == dy[0]))
                         {
                             find = true;
                             resultcor = dx[0].ToString() + "," + dy[0].ToString();
@@ -686,7 +730,7 @@ namespace warehouse
                                 MessageBox.Show(resultcor);
                             }
                             break;
-                        }
+                        }*/
 
 
                     }
@@ -723,7 +767,11 @@ namespace warehouse
             sx = Convert.ToInt32(lasttemp[0]) + direction;
             sy = Convert.ToInt32(lasttemp[1]);
             direction = 0;
-            string[] lastend = End_location.Text.Split(',');
+            /*string[] lastend = End_location.Text.Split(',');
+            int ex = Convert.ToInt32(lastend[0]);
+            int ey = Convert.ToInt32(lastend[1]);*/
+            //the end node and the start node combine
+            string[] lastend = Start_location.Text.Split(',');
             int ex = Convert.ToInt32(lastend[0]);
             int ey = Convert.ToInt32(lastend[1]);
             totaldistance = totaldistance + findpath_exit(sx, sy, ex, ey,write);
@@ -791,17 +839,22 @@ namespace warehouse
 
         private void Find_multi_item_Click(object sender, EventArgs e)
         {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            long startmemory = GC.GetTotalMemory(false);
             Find_Path_Multi_No_Change_Order.Enabled = false;
             Find_multi_item.Enabled = false;
             string[] itemid = Multi_item_set.Text.Split(',');
             List<item> collection = new List<item>();
             List<string> cordination = new List<string>();
             String[] start = Start_location.Text.Split(',');
-            string[] end = End_location.Text.Split(',');
             int startx = Convert.ToInt32(start[0]);
             int starty = Convert.ToInt32(start[1]);
             List<string> result = new List<string>();
             string order="";
+            string path = "";
             foreach (string item in itemid)
             {
                 bool finded = false;
@@ -825,8 +878,9 @@ namespace warehouse
                 //MessageBox.Show(individualitem.id.ToString() + " [" + individualitem.x.ToString() + "," + individualitem.y.ToString()+"]");
                 cordination.Add((2*individualitem.x+1).ToString() + "," + (2*individualitem.y+1).ToString());
             }
-            result=findpath_multi(startx, starty, cordination,false);
-            foreach (string lookfor in result)
+            cordination.Add(Start_location.Text);
+            result=findpath_multi(cordination,false);
+            /*foreach (string lookfor in result)
             {
                 string[] cor = lookfor.Split(',');
                 int x = Convert.ToInt32(cor[0]);
@@ -840,8 +894,20 @@ namespace warehouse
                     }
                 }
                 
+            }*/
+            //MessageBox.Show(order);
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            long endmemory = GC.GetTotalMemory(false);
+            MessageBox.Show("the total memory usage is " + (endmemory - startmemory).ToString());
+            MessageBox.Show("the amount of time finding simply path is " + elapsedMs.ToString());
+            foreach (string temp in result)
+            {
+                path = path + " " + temp;
             }
-            MessageBox.Show(order);
+
+            MessageBox.Show("the path is " + path);
+            
 
         }
 
@@ -853,7 +919,6 @@ namespace warehouse
             List<item> collection = new List<item>();
             List<string> cordination = new List<string>();
             String[] start = Start_location.Text.Split(',');
-            string[] end = End_location.Text.Split(',');
             int startx = Convert.ToInt32(start[0]);
             int starty = Convert.ToInt32(start[1]);
             foreach (string item in itemid)
@@ -927,7 +992,6 @@ namespace warehouse
                 }
             }
             String[] start = Start_location.Text.Split(',');
-            string[] end = End_location.Text.Split(',');
             string oldorder = "";
             string optimalorder = "";
             int startx = Convert.ToInt32(start[0]);
@@ -969,7 +1033,7 @@ namespace warehouse
                 }
                 tw.WriteLine("Order:" + count.ToString());
                 tw.WriteLine("Start position=" + Start_location.Text);
-                tw.WriteLine("End position=" + End_location.Text);
+                tw.WriteLine("End position=" + Start_location.Text);
                 tw.WriteLine("");
                 foreach (item individualitem in collection)
                 {
@@ -981,7 +1045,8 @@ namespace warehouse
                 tw.WriteLine("The original order is:" + oldorder);
                 clear();
                 tw.WriteLine("");
-                result = findpath_multi(startx, starty, cordination, true);
+                cordination.Add(Start_location.Text);
+                result = findpath_multi(cordination, true);
                 foreach (string lookfor in result)
                 {
                     string[] cor = lookfor.Split(',');
@@ -1007,7 +1072,134 @@ namespace warehouse
             tw.Close();
             MessageBox.Show("complete");
         }
-        
+
+        private void Find_Lower_Bound_Click(object sender, EventArgs e)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            long startmemory = GC.GetTotalMemory(false);
+            Find_Path_Multi_No_Change_Order.Enabled = false;
+            Find_multi_item.Enabled = false;
+            string[] itemid = Multi_item_set.Text.Split(',');
+            List<item> collection = new List<item>();
+            List<string> cordination = new List<string>();
+            List<string> result = new List<string>();
+            int lowerbound = 0;
+            foreach (string item in itemid)
+            {
+                bool finded = false;
+                foreach (item storeitem in itemcollection.storelist)
+                {
+
+                    if (storeitem.id == Convert.ToInt32(item))
+                    {
+                        collection.Add(storeitem);
+                        finded = true;
+                    }
+                }
+                if (!finded)
+                {
+                    MessageBox.Show("item " + item + " does not find");
+                }
+
+            }
+            foreach (item individualitem in collection)
+            {
+                //MessageBox.Show(individualitem.id.ToString() + " [" + individualitem.x.ToString() + "," + individualitem.y.ToString()+"]");
+                cordination.Add((2 * individualitem.x + 2).ToString() + "," + (2 * individualitem.y + 1).ToString());
+            }
+            cordination.Add(Start_location.Text);
+            lowerbound=lower_bound(cordination);
+            watch.Stop();
+            var elapsedMs = watch.ElapsedMilliseconds;
+            long endmemory = GC.GetTotalMemory(false);
+            MessageBox.Show("the total memory usage is " + (endmemory - startmemory).ToString());
+            MessageBox.Show("the amount of time finding simply path is " + elapsedMs.ToString());
+            MessageBox.Show("the maximun lower bound is " + lowerbound.ToString());
+
+        }
+        private int lower_bound(List<string> cordination)
+        {
+            int[,] adjancency_list = new int[cordination.Count, cordination.Count];
+            int[,] cor_point = new int[cordination.Count, 2];
+            List<connection_list> final_list = new List<connection_list>();
+            List<connection_list> adjac_list = new List<connection_list>();
+            for (int k = 0; k < cordination.Count; k++)
+            {
+                string[] temppoint = cordination[k].Split(',');
+                cor_point[k, 0] = Convert.ToInt32(temppoint[0]);
+                cor_point[k, 1] = Convert.ToInt32(temppoint[1]);
+            }
+            int distance = 0;
+            for (int i = 0; i < cordination.Count; i++)
+            {
+                for (int j = 0; j < cordination.Count; j++)
+                {
+                    distance = findpath(cor_point[i, 0], cor_point[i, 1], cor_point[j, 0], cor_point[j, 1]);
+                    adjancency_list[i, j] = distance;
+                    if (distance != 0)
+                    {
+                        adjac_list.Add(new connection_list { length = distance, startnode = i, endnode = j });
+                    }
+                    clear();
+                }
+            }
+            IEnumerable<connection_list> query = adjac_list.OrderBy(t => t.length);
+            final_list = query.ToList();
+            List<connection_list> finalmst = new List<connection_list>();
+            int finaltotaldistance = 0;
+            for (int nocount = 0; nocount < cordination.Count; nocount++)
+            {
+                List<connection_list> mst = new List<connection_list>();
+                List<int> visited_node = new List<int>();
+                List<int> visited_node_lastround = new List<int>();
+                int totaldistance = 0;
+                foreach (connection_list item in final_list)
+                {
+                    if (((visited_node.IndexOf(item.startnode) == -1) || visited_node.IndexOf(item.endnode) == -1) && item.endnode != nocount && item.startnode != nocount)
+                    {
+                        mst.Add(item);
+                        totaldistance += item.length;
+                        if (visited_node.IndexOf(item.startnode) == -1)
+                        {
+                            visited_node.Add(item.startnode);
+                        }
+                        if (visited_node.IndexOf(item.endnode) == -1)
+                        {
+                            visited_node.Add(item.endnode);
+                        }
+                    }
+                }
+                int count = 0;
+                visited_node.Add(nocount);
+                foreach (connection_list item in final_list)
+                {
+                    if (count < 2)
+                    {
+                        if ((item.startnode == nocount || item.endnode == nocount) && (visited_node_lastround.IndexOf(item.startnode) == -1 || visited_node_lastround.IndexOf(item.endnode) == -1))
+                        {
+                            mst.Add(item);
+                            totaldistance += item.length;
+                            count++;
+                            if (visited_node_lastround.IndexOf(item.startnode) == -1)
+                            {
+                                visited_node_lastround.Add(item.startnode);
+                            }
+                            if (visited_node_lastround.IndexOf(item.endnode) == -1)
+                            {
+                                visited_node_lastround.Add(item.endnode);
+                            }
+                        }
+                    }
+                }
+                if (totaldistance > finaltotaldistance)
+                {
+                    finaltotaldistance = totaldistance;
+                    finalmst = mst.ToList();
+                    mst.Clear();
+                }
+            }
+            return finaltotaldistance;
+        }
     }
     public class item
     {
@@ -1083,5 +1275,11 @@ namespace warehouse
             this.distance = distance;
             this.previousnode = previousnode;
         }
+    }
+    class connection_list
+    {
+        public int length { get; set; }
+        public int startnode { get; set; }
+        public int endnode { get; set; }
     }
 }

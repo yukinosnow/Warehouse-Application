@@ -17,3 +17,12 @@ D:\EECS221APP\warehouse\warehouse\obj\Debug\warehouse.csproj.GenerateResource.ca
 D:\EECS221APP\warehouse\warehouse\obj\Debug\warehouse.csproj.CoreCompileInputs.cache
 D:\EECS221APP\warehouse\warehouse\obj\Debug\warehouse.exe
 D:\EECS221APP\warehouse\warehouse\obj\Debug\warehouse.pdb
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\bin\Debug\warehouse.exe.config
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\obj\Debug\warehouse.exe
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\obj\Debug\warehouse.pdb
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\bin\Debug\warehouse.exe
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\bin\Debug\warehouse.pdb
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\obj\Debug\warehouse.csprojResolveAssemblyReference.cache
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\obj\Debug\warehouse.Form1.resources
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\obj\Debug\warehouse.Properties.Resources.resources
+E:\EECS221APP\Warehouse-Application\warehouse\warehouse\obj\Debug\warehouse.csproj.GenerateResource.Cache

@@ -35,8 +35,6 @@
             this.Destionation = new System.Windows.Forms.TextBox();
             this.Find_Path = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.End_location = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.Start_location = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
@@ -46,6 +44,7 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.Clear_Path_Simply = new System.Windows.Forms.Button();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.Find_Lower_Bound = new System.Windows.Forms.Button();
             this.Find_Path_Multi_No_Change_Order = new System.Windows.Forms.Button();
             this.Clear_Path = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
@@ -119,28 +118,10 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "MAP";
             // 
-            // End_location
-            // 
-            this.End_location.Enabled = false;
-            this.End_location.Location = new System.Drawing.Point(100, 68);
-            this.End_location.Name = "End_location";
-            this.End_location.Size = new System.Drawing.Size(100, 20);
-            this.End_location.TabIndex = 11;
-            this.End_location.Text = "3,1";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(14, 71);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(73, 13);
-            this.label3.TabIndex = 10;
-            this.label3.Text = "End Location:";
-            // 
             // Start_location
             // 
             this.Start_location.Enabled = false;
-            this.Start_location.Location = new System.Drawing.Point(100, 23);
+            this.Start_location.Location = new System.Drawing.Point(100, 64);
             this.Start_location.Name = "Start_location";
             this.Start_location.Size = new System.Drawing.Size(100, 20);
             this.Start_location.TabIndex = 9;
@@ -151,9 +132,9 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(11, 26);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(76, 13);
+            this.label4.Size = new System.Drawing.Size(119, 13);
             this.label4.TabIndex = 8;
-            this.label4.Text = "Start Location:";
+            this.label4.Text = "Start and End Location:";
             // 
             // label5
             // 
@@ -224,22 +205,32 @@
             // 
             // groupBox3
             // 
+            this.groupBox3.Controls.Add(this.Find_Lower_Bound);
             this.groupBox3.Controls.Add(this.Find_Path_Multi_No_Change_Order);
             this.groupBox3.Controls.Add(this.Clear_Path);
             this.groupBox3.Controls.Add(this.label4);
             this.groupBox3.Controls.Add(this.Start_location);
             this.groupBox3.Controls.Add(this.Find_multi_item);
-            this.groupBox3.Controls.Add(this.label3);
             this.groupBox3.Controls.Add(this.LoadOrder);
-            this.groupBox3.Controls.Add(this.End_location);
             this.groupBox3.Controls.Add(this.Multi_item_set);
             this.groupBox3.Controls.Add(this.label5);
             this.groupBox3.Location = new System.Drawing.Point(1640, 215);
             this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(220, 438);
+            this.groupBox3.Size = new System.Drawing.Size(220, 509);
             this.groupBox3.TabIndex = 17;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Multiple items";
+            // 
+            // Find_Lower_Bound
+            // 
+            this.Find_Lower_Bound.Enabled = false;
+            this.Find_Lower_Bound.Location = new System.Drawing.Point(33, 442);
+            this.Find_Lower_Bound.Name = "Find_Lower_Bound";
+            this.Find_Lower_Bound.Size = new System.Drawing.Size(151, 23);
+            this.Find_Lower_Bound.TabIndex = 18;
+            this.Find_Lower_Bound.Text = "Find Lower Bound";
+            this.Find_Lower_Bound.UseVisualStyleBackColor = true;
+            this.Find_Lower_Bound.Click += new System.EventHandler(this.Find_Lower_Bound_Click);
             // 
             // Find_Path_Multi_No_Change_Order
             // 
@@ -291,8 +282,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button Find_Path;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.TextBox End_location;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox Start_location;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
@@ -304,6 +293,7 @@
         private System.Windows.Forms.Button Clear_Path;
         private System.Windows.Forms.Button Clear_Path_Simply;
         private System.Windows.Forms.Button Find_Path_Multi_No_Change_Order;
+        private System.Windows.Forms.Button Find_Lower_Bound;
     }
 }
 
